@@ -6,6 +6,7 @@
     "dev": "next dev",
     "test": "jest --runInBand",
     "build": "next build",
+    "postinstall": "prisma generate",
     "start": "next start",
     "migrate": "node ./scripts/init-db.js",
     "prisma:generate": "prisma generate",
