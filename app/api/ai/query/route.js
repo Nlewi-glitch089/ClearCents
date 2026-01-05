@@ -98,7 +98,9 @@ export async function POST(req) {
 
     // Persist the query/answer for authenticated users
     if (user) {
-      await prisma.aiInsight.create({ data: { userId: user.id, input: { query, context: selectedContexts }, output: answer } });
+      const inputSnapshot = { query, context: selectedContexts };
+      const inputToSave = typeof inputSnapshot === 'object' ? JSON.stringify(inputSnapshot) : inputSnapshot;
+      await prisma.aiInsight.create({ data: { userId: user.id, input: inputToSave, output: answer } });
       return NextResponse.json({ answer, saved: true, source });
     }
 

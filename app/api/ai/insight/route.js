@@ -100,7 +100,9 @@ export async function POST(req) {
 
     // Save AI insight only when a user is authenticated; for guests, return insight but mark as unsaved
     if (user) {
-      await prisma.aiInsight.create({ data: { userId: user.id, input: { count: txs.length, onboarding: onboarding || null }, output: insight } });
+      const inputSnapshot = { count: txs.length, onboarding: onboarding || null };
+      const inputToSave = typeof inputSnapshot === 'object' ? JSON.stringify(inputSnapshot) : inputSnapshot;
+      await prisma.aiInsight.create({ data: { userId: user.id, input: inputToSave, output: insight } });
       return NextResponse.json({ insight, saved: true, source: source || 'unknown' });
     } else {
       return NextResponse.json({ insight, saved: false, message: 'Sign in to save insights and history.', source: source || 'deterministic' });

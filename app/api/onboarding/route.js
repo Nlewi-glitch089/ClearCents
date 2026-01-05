@@ -23,8 +23,9 @@ export async function POST(req){
     const body = await req.json();
     // Store the entire body as the input snapshot so we persist reasons and any other fields
     const input = body;
+    const inputToSave = typeof input === 'object' ? JSON.stringify(input) : input;
     const output = `Onboarding saved: ${body.goal || 'no goal provided'}`;
-    await prisma.aiInsight.create({ data: { userId: user.id, input, output } });
+    await prisma.aiInsight.create({ data: { userId: user.id, input: inputToSave, output } });
     const res = NextResponse.json({ success: true });
     // clear the must_onboard flag so middleware won't redirect again
     res.headers.append('Set-Cookie', 'must_onboard=; Path=/; HttpOnly; Max-Age=0; SameSite=Lax');
