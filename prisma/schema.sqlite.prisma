@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String       @id @default(uuid())
+  email        String       @unique
+  name         String?
+  passwordHash String
+  role         String
+  createdAt    DateTime     @default(now())
+  categories   Category[]
+  transactions Transaction[]
+  goals        Goal[]
+  aiInsights   AiInsight[]
+}
+
+model Category {
+  id      String   @id @default(uuid())
+  user    User?    @relation(fields: [userId], references: [id])
+  userId  String?
+  name    String
+  type    String @default("expense")
+  transactions Transaction[]
+}
+
+model Transaction {
+  id          String    @id @default(uuid())
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  amount      Decimal
+  type        String
+  category    Category? @relation(fields: [categoryId], references: [id])
+  categoryId  String?
+  description String?
+  occurredAt  DateTime  @default(now())
+  createdAt   DateTime  @default(now())
+}
+
+model Goal {
+  id           String   @id @default(uuid())
+  user         User     @relation(fields: [userId], references: [id])
+  userId       String
+  title        String
+  targetAmount Decimal
+  currentAmount Decimal @default(0)
+  dueDate      DateTime?
+  createdAt    DateTime  @default(now())
+}
+
+model AiInsight {
+  id         String   @id @default(uuid())
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String
+  input      String
+  output     String
+  createdAt  DateTime @default(now())
+}
+
+// For SQLite fallback we use string fields instead of enums
+// role will be one of: 'student' | 'coach' | 'instructor'
+// type will be one of: 'income' | 'expense'

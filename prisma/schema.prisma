@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String       @id @default(uuid()) @db.Uuid
+  email        String       @unique
+  name         String?
+  passwordHash String       @map("password_hash")
+  role         UserRole
+  createdAt    DateTime     @default(now()) @map("created_at")
+  categories   Category[]
+  transactions Transaction[]
+  goals        Goal[]
+  aiInsights   AiInsight[]
+}
+
+model Category {
+  id      String   @id @default(uuid()) @db.Uuid
+  user    User?    @relation(fields: [userId], references: [id])
+  userId  String?  @db.Uuid
+  name    String
+  type    TransactionType @default(expense)
+  transactions Transaction[]
+  @@map("categories")
+}
+
+model Transaction {
+  id          String    @id @default(uuid()) @db.Uuid
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String    @db.Uuid
+  amount      Decimal
+  type        TransactionType
+  category    Category? @relation(fields: [categoryId], references: [id])
+  categoryId  String?   @db.Uuid
+  description String?
+  occurredAt  DateTime  @map("occurred_at") @default(now())
+  createdAt   DateTime  @map("created_at") @default(now())
+  @@map("transactions")
+}
+
+model Goal {
+  id           String   @id @default(uuid()) @db.Uuid
+  user         User     @relation(fields: [userId], references: [id])
+  userId       String   @db.Uuid
+  title        String
+  targetAmount Decimal  @map("target_amount")
+  currentAmount Decimal @map("current_amount") @default(0)
+  dueDate      DateTime? @map("due_date")
+  createdAt    DateTime  @map("created_at") @default(now())
+  @@map("goals")
+}
+
+model AiInsight {
+  id         String   @id @default(uuid()) @db.Uuid
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String   @db.Uuid
+  input      Json     @map("input_snapshot")
+  output     String   @map("output_text")
+  createdAt  DateTime @map("created_at") @default(now())
+  @@map("ai_insights")
+}
+
+enum UserRole {
+  student
+  coach
+  instructor
+}
+
+enum TransactionType {
+  income
+  expense
+}
