@@ -19,14 +19,14 @@ async function getUserFromReq(req){
 export async function POST(req){
   try{
     const user = await getUserFromReq(req);
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!user) return NextResponse.json({ error: 'Nice try. The bouncer says you’re not on the list 🕶️' }, { status: 401 });
     const body = await req.json();
-    // Store the entire body as the input snapshot so we persist reasons and any other fields
+    // Store the entire body as a JSON input snapshot so we persist reasons and any other fields
     const input = body;
-    const inputToSave = typeof input === 'object' ? JSON.stringify(input) : input;
     const output = `Onboarding saved: ${body.goal || 'no goal provided'}`;
-    await prisma.aiInsight.create({ data: { userId: user.id, input: inputToSave, output } });
-    const res = NextResponse.json({ success: true });
+    // write JSON directly so Prisma stores a proper JSON object
+    await prisma.aiInsight.create({ data: { userId: user.id, input: input, output } });
+    const res = NextResponse.json({ success: true, onboarding: input });
     // clear the must_onboard flag so middleware won't redirect again
     res.headers.append('Set-Cookie', 'must_onboard=; Path=/; HttpOnly; Max-Age=0; SameSite=Lax');
     return res;
@@ -38,13 +38,34 @@ export async function POST(req){
 export async function GET(req){
   try{
     const user = await getUserFromReq(req);
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!user) return NextResponse.json({ error: 'Nice try. The bouncer says you’re not on the list 🕶️' }, { status: 401 });
 
-    // Return the most recent onboarding-like aiInsight input for this user
-    const record = await prisma.aiInsight.findFirst({ where: { userId: user.id }, orderBy: { createdAt: 'desc' } });
-    if (!record) return NextResponse.json({ onboarding: null });
+    // Scan recent aiInsight rows and return the most recent one that looks like onboarding data.
+    const records = await prisma.aiInsight.findMany({ where: { userId: user.id }, orderBy: { createdAt: 'desc' }, take: 50 });
+    if (!records || records.length === 0) return NextResponse.json({ onboarding: null });
 
-    return NextResponse.json({ onboarding: record.input || null });
+    function normalizeInput(val){
+      if (val == null) return null;
+      if (typeof val === 'string'){
+        try { return JSON.parse(val); } catch(e){ console.error('Silent failure detected [onboarding:parse-input]', e); return val; }
+      }
+      return val;
+    }
+
+    for (const r of records){
+      let inputVal = normalizeInput(r.input);
+      if (!inputVal) continue;
+      // If onboarding was saved directly, `inputVal` will have `goal`, `monthly`, `reasons`, etc.
+      if (inputVal.goal || inputVal.monthly || inputVal.reasons || inputVal.why) return NextResponse.json({ onboarding: inputVal });
+      // Some records may have an `onboarding` field (e.g., insight snapshots)
+      if (inputVal.onboarding && (inputVal.onboarding.goal || inputVal.onboarding.reasons)) return NextResponse.json({ onboarding: inputVal.onboarding });
+      // also accept nested input_snapshot style
+      if (inputVal.input_snapshot && inputVal.input_snapshot.onboarding) return NextResponse.json({ onboarding: inputVal.input_snapshot.onboarding });
+    }
+
+    // nothing found — return the most recent raw input as a fallback
+    const fallback = normalizeInput(records[0].input) || null;
+    return NextResponse.json({ onboarding: fallback });
   }catch(err){
     return NextResponse.json({ error: err.message || String(err) }, { status: 500 });
   }

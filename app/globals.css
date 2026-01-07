@@ -9,7 +9,9 @@
 	--header-height:72px;
 }
 html,body{padding:0;margin:0;font-family:Inter,system-ui,Arial,Helvetica,sans-serif;background:linear-gradient(180deg,var(--bg-top),var(--bg-bottom));color:#fff;min-height:100vh}
-body{display:flex;flex-direction:column}
+
+html{font-size:16px}
+body{display:flex;flex-direction:column;font-size:1rem;line-height:1.6}
 a{color:var(--accent);text-decoration:none}
 *{box-sizing:border-box}
 
@@ -25,12 +27,34 @@ header.site-header{
 
 .brand{display:flex;align-items:center;gap:12px}
 .brand .logo{width:36px;height:36px;border-radius:8px;background:#0f172a;display:flex;align-items:center;justify-content:center;font-weight:700}
-.brand h1{margin:0;font-size:18px;color:var(--heading-blue)}
+.brand h1{margin:0;font-size:1.125rem;color:var(--heading-blue)}
 
 nav.site-nav{display:flex;gap:18px;align-items:center}
-nav.site-nav a{color:rgba(255,255,255,0.85);padding:8px 6px;border-radius:4px}
+nav.site-nav a{color:rgba(255,255,255,0.85);padding:8px 6px;border-radius:4px;font-size:1rem;display:inline-flex;align-items:center;text-decoration:none;font-weight:400;letter-spacing:0.2px;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased}
 nav.site-nav a:hover{color:var(--accent)}
 nav.site-nav a.active{color:var(--accent);box-shadow:0 2px 0 var(--accent) inset}
+
+/* Make a sign-out button visually match the nav links */
+nav.site-nav .signout-btn{
+	background:transparent;
+	border:none;
+	color:rgba(255,255,255,0.85);
+	padding:8px 6px;
+	border-radius:4px;
+	font:inherit;
+	line-height:1;
+	cursor:pointer;
+	font-size:1rem;
+	margin-left:8px;
+	display:inline-flex;
+	align-items:center;
+	text-rendering:optimizeLegibility;
+	-webkit-font-smoothing:antialiased;
+}
+nav.site-nav .signout-btn:hover{color:var(--accent)}
+
+/* Ensure keyboard focus is visible on the sign-out button */
+nav.site-nav .signout-btn:focus{outline:2px solid rgba(62,166,255,0.18);outline-offset:2px}
 
 .hero{padding:56px 20px 40px;text-align:center}
 .hero h2{font-size:48px;margin:8px 0 12px;color:var(--heading-blue)}
@@ -44,7 +68,7 @@ nav.site-nav a.active{color:var(--accent);box-shadow:0 2px 0 var(--accent) inset
 .spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,0.28);border-top-color:#fff;border-radius:50%;display:inline-block;margin-right:8px;vertical-align:middle;animation:spin .8s linear infinite}
 @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 
-.container{max-width:900px;margin:24px auto;padding:0 20px}
+.container{max-width:1200px;margin:24px auto;padding:0 20px}
 .app-main{flex:1}
 .card{background:rgba(255,255,255,0.03);padding:20px;border-radius:10px;border:1px solid rgba(255,255,255,0.04)}
 
@@ -52,7 +76,9 @@ nav.site-nav a.active{color:var(--accent);box-shadow:0 2px 0 var(--accent) inset
 .card > h3{color:var(--heading-blue);margin-top:0}
 
 /* Headings: page title uses blue, section headings remain high-contrast white */
-h1,h2{margin:0}
+h1{font-size:2rem;margin:0}
+h2{font-size:1.5rem;margin:0}
+h3{font-size:1.125rem;margin:0}
 .page-hero h2{color:var(--heading-blue)}
 .callout h4, .feature-title{color:var(--heading-blue)}
 .split-row h3{color:rgba(255,255,255,0.95);margin-top:0}
@@ -75,8 +101,9 @@ h1,h2{margin:0}
 .feature-grid > *:nth-child(odd){background:linear-gradient(180deg, rgba(255,255,255,0.015), rgba(0,0,0,0.02))}
 .feature-grid > *:nth-child(even){background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.01));border:1px solid rgba(255,255,255,0.02)}
 
-.feature-icon{width:56px;height:56px;border-radius:12px;background:linear-gradient(90deg,var(--icon-accent),var(--icon-accent));display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;flex-shrink:0}
-.feature-icon svg{width:28px;height:28px}
+.feature-icon{width:64px;height:64px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;font-weight:800;color:#021;flex-shrink:0;border:1px solid rgba(16,192,138,0.12);box-shadow:0 10px 30px rgba(16,192,138,0.12);transition:transform .14s ease,box-shadow .14s ease}
+.feature-icon svg{width:30px;height:30px;filter:drop-shadow(0 8px 20px rgba(16,192,138,0.12))}
+.feature-icon:hover{transform:translateY(-6px) scale(1.05);box-shadow:0 20px 48px rgba(16,192,138,0.22)}
 
 /* Custom select styles */
 .custom-select > button.card{padding:8px 12px;border-radius:8px;background:linear-gradient(180deg, rgba(0,0,0,0.18), rgba(0,0,0,0.12));display:flex;align-items:center;border:1px solid rgba(255,255,255,0.03)}
@@ -84,8 +111,7 @@ h1,h2{margin:0}
 .custom-select .card[role="button"]{cursor:pointer}
 
 /* category badges */
-.feature-icon.cat-income{background:linear-gradient(90deg,var(--icon-accent),var(--icon-accent));color:#fff}
-.feature-icon.cat-expense{background:linear-gradient(90deg,var(--icon-accent),var(--icon-accent));color:#fff}
+.feature-icon.cat-income, .feature-icon.cat-expense{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#021;border:1px solid rgba(16,192,138,0.10);box-shadow:0 8px 22px rgba(16,192,138,0.08)}
 .custom-select .card > div[role="button"]{color:#fff}
 .custom-select .card div{color:#fff}
 
@@ -187,16 +213,37 @@ select option{color:#021}
 
 /* Feature and content layout helpers */
 .split-row{display:grid;grid-template-columns:1fr;gap:18px}
+.page-hero + .split-row h3,
+.page-hero + .split-row h4,
+.page-hero + .split-row .mini-card h4{
+	color:var(--heading-blue);
+}
 .callout{background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));padding:16px;border-radius:10px;border:1px solid rgba(255,255,255,0.02)}
-.feature-grid{display:grid;grid-template-columns:1fr;gap:14px}
-.feature-card{background:rgba(255,255,255,0.02);padding:16px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);display:flex;gap:12px;align-items:flex-start}
-.feature-icon{width:48px;height:48px;border-radius:10px;background:linear-gradient(90deg,var(--icon-accent),var(--icon-accent));display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff}
-.feature-icon svg{width:28px;height:28px}
-.feature-title{font-weight:700;margin-bottom:6px}
-.feature-desc{color:var(--muted);font-size:14px}
+.features-grid{display:block}
+.grid-3{display:grid;grid-template-columns:1fr;gap:16px}
+.feature-card{position:relative;background:linear-gradient(180deg, rgba(255,255,255,0.015), rgba(0,0,0,0.02));padding:28px;border-radius:12px;border:1px solid rgba(255,255,255,0.03);display:block;min-height:160px;overflow:visible}
+.feature-card::before{content:'';position:absolute;left:16px;right:16px;top:8px;height:4px;background:linear-gradient(90deg,var(--accent),var(--accent-2));border-radius:4px;opacity:0.95}
+.feature-card h4{margin:0 0 10px;font-size:18px;color:var(--accent);font-weight:800}
+.feature-card ul{margin:0;padding-left:0;color:var(--muted);line-height:1.5;list-style:none}
+.feature-card li{margin-bottom:8px}
+.feature-card .feature-bullet{position:relative;padding-left:36px}
+.feature-card .feature-bullet{position:relative;padding-left:22px}
+.feature-card .feature-bullet:before{content:'✓';position:absolute;left:0;top:0;color:var(--accent);background:none;width:auto;height:auto;border-radius:0;display:inline-block;font-weight:800}
+
+.feature-link{display:block;color:inherit;text-decoration:none}
+.feature-link:hover h4{color:var(--heading-blue)}
+.feature-link div:first-child{transition:transform .14s ease,box-shadow .14s ease}
+.feature-link:hover div:first-child{transform:translateY(-4px);box-shadow:0 10px 24px rgba(2,6,23,0.45)}
 
 @media(min-width:860px){
-	.split-row{grid-template-columns:1fr 380px}
+	.grid-3{grid-template-columns:repeat(3,1fr)}
+}
+@media(min-width:600px) and (max-width:859px){
+	.grid-3{grid-template-columns:repeat(2,1fr)}
+}
+
+@media(min-width:860px){
+	.split-row{grid-template-columns:1fr minmax(380px,480px)}
 	.feature-grid{grid-template-columns:repeat(2,1fr)}
 }
 
@@ -213,28 +260,55 @@ select option{color:#021}
 .ai-chat-button .ai-icon{font-size:18px;margin-right:8px}
 
 .ai-chat-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.46);z-index:70;display:flex;align-items:center;justify-content:center;padding:20px}
-.ai-chat-panel{width:520px;max-width:94%;background:#fff;border-radius:10px;color:#012;padding:14px;box-shadow:0 22px 48px rgba(2,6,23,0.6)}
+.ai-chat-panel{width:520px;max-width:94%;background:linear-gradient(180deg,var(--bg-top),var(--bg-bottom));border-radius:10px;color:#fff;padding:14px;box-shadow:0 22px 48px rgba(2,6,23,0.6)}
 .ai-chat-header{display:flex;justify-content:space-between;align-items:center;gap:12px}
-.ai-chat-history{height:300px;overflow:auto;margin-top:10px;padding:8px;border-radius:8px;background:#f7f8f9;border:1px solid rgba(2,6,23,0.04)}
+.ai-chat-history{height:300px;overflow:auto;margin-top:10px;padding:8px;border-radius:8px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));border:1px solid rgba(255,255,255,0.04);color:#fff}
 .ai-chat-message{margin-bottom:10px}
-.ai-chat-message .role{font-size:12px;color:#556}
+.ai-chat-message .role{font-size:12px;color:rgba(255,255,255,0.8)}
 .ai-chat-message-user{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#021;padding:8px;border-radius:8px;display:inline-block}
-.ai-chat-message-ai{background:#eef2f0;color:#012;padding:8px;border-radius:8px;display:inline-block}
+.ai-chat-message-ai{background:rgba(255,255,255,0.06);color:#fff;padding:8px;border-radius:8px;display:inline-block}
 .ai-chat-controls{display:flex;gap:8px;margin-top:10px}
-.ai-chat-input{flex:1;padding:10px;border-radius:8px;border:1px solid rgba(2,6,23,0.06)}
+.ai-chat-input{flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:#fff}
+
+/* Loading overlay that covers the chat history while waiting for AI */
+.ai-loading-overlay{position:absolute;left:0;right:0;top:0;bottom:56px;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(10,6,20,0.55),rgba(10,6,20,0.6));z-index:80;border-radius:8px}
 
 /* Why page styles (cards grid matching provided mock) */
 .why-hero{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));padding:28px;border-radius:10px;margin-bottom:18px}
 .why-card-grid{padding:18px}
 .why-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
-.why-card{display:flex;justify-content:space-between;align-items:center;padding:18px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.018), rgba(0,0,0,0.02));border:1px solid rgba(255,255,255,0.03)}
+.why-card{display:flex;justify-content:space-between;align-items:center;padding:18px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.018), rgba(0,0,0,0.02));border:1px solid rgba(255,255,255,0.03);border-left:4px solid var(--accent);padding-left:20px}
 .why-left{max-width:74%}
-.why-title{margin:0 0 6px;color:#ff3b6f;font-weight:700}
+.why-title{margin:0 0 6px;color:var(--accent);font-weight:800}
 .why-desc{margin:0;color:var(--muted);font-size:13px}
 .why-right{display:flex;align-items:center;gap:12px}
 .why-badge{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#021;padding:8px 12px;border-radius:999px;font-weight:700;display:inline-flex;align-items:center;gap:8px}
+
+/* Make icons on Why page visually match feature icons */
+.why-card .why-icon, .why-right .why-icon{width:52px;height:52px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0;border:1px solid rgba(16,192,138,0.10);box-shadow:0 8px 22px rgba(16,192,138,0.10);transition:transform .14s ease,box-shadow .14s ease}
+.why-card .why-icon svg, .why-right .why-icon svg{width:26px;height:26px;filter:drop-shadow(0 6px 14px rgba(16,192,138,0.10));stroke:currentColor;fill:currentColor}
+
+/* Ensure feature icons on the Why page render white when using the shared .feature-icon wrapper */
+.feature-icon.why-icon{color:#fff}
+.feature-icon.why-icon svg{stroke:currentColor;fill:currentColor}
+.why-card .why-icon:hover, .why-right .why-icon:hover{transform:translateY(-4px)}
 .why-badge .check{font-weight:700}
 .why-footer{margin-top:18px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.03)}
+
+/* Compact cards and mini-grid for shorter About sections */
+.card.compact{padding:12px;border-radius:8px}
+.mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;align-items:stretch}
+.mini-card{background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.01));padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);min-height:64px;display:flex;flex-direction:column;justify-content:center}
+.mini-card h4{margin:0 0 6px;font-size:14px;color:var(--heading-blue)}
+.mini-card .muted-note{font-size:13px}
+
+@media(max-width:1199px){
+	.mini-grid{grid-template-columns:repeat(2,1fr)}
+}
+
+@media(max-width:880px){
+	.mini-grid{grid-template-columns:1fr}
+}
 
 @media(max-width:880px){
 	.why-grid{grid-template-columns:1fr}

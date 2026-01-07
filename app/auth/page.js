@@ -12,19 +12,7 @@ export default function AuthPage(){
   const router = useRouter();
 
   // Dev helper: quick-fill seeded accounts when on localhost
-  function devFill(which){
-    if (which === 'rob') { setEmail('rob@launchpadphilly.org'); setPassword('lpuser1'); }
-    if (which === 'sanaa') { setEmail('sanaa@launchpadphilly.org'); setPassword('lpuser2'); }
-    if (which === 'taheera') { setEmail('taheera@launchpadphilly.org'); setPassword('lpuser3'); }
-  }
-  const [isLocal, setIsLocal] = useState(false);
-  useEffect(() => {
-    try {
-      setIsLocal(typeof window !== 'undefined' && window.location.hostname.includes('localhost'));
-    } catch (e) {
-      setIsLocal(false);
-    }
-  }, []);
+  // Dev quick-fill removed for security — staff should sign in using their passwords
 
   async function handleLogin(e){
     e.preventDefault(); setError(''); setLoading(true);
@@ -83,13 +71,7 @@ export default function AuthPage(){
                   <div style={{display:'flex',gap:8,alignItems:'center'}}>
                     <button className="btn" disabled={loading} type="submit">{loading ? 'Signing in...' : 'Sign in'}</button>
                   </div>
-                  {isLocal && (
-                    <div style={{marginTop:8,display:'flex',gap:8}}>
-                      <button type="button" className="btn ghost" onClick={()=>devFill('rob')}>Dev: rob</button>
-                      <button type="button" className="btn ghost" onClick={()=>devFill('sanaa')}>Dev: sanaa</button>
-                      <button type="button" className="btn ghost" onClick={()=>devFill('taheera')}>Dev: taheera</button>
-                    </div>
-                  )}
+                  {/* Dev quick-login buttons removed */}
                 </form>
               ) : (
                 <form onSubmit={handleRegister} style={{display:'grid',gap:12}}>

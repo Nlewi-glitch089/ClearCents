@@ -29,13 +29,14 @@ export default function Nav() {
     } catch (err) {
       // ignore
     }
-    window.location = '/';
+    // After signing out, send the user to the sign-in page
+    window.location = '/auth';
   }
 
   return (
     <>
       <Link href="/profile">Profile</Link>
-      <button onClick={handleSignOut} style={{ marginLeft: 8, background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer', padding: 6 }}>
+      <button type="button" onClick={handleSignOut} className="signout-btn">
         Sign out
       </button>
     </>

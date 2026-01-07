@@ -7,13 +7,13 @@ export async function POST(req) {
     const cookieHeader = req.headers.get('cookie') || '';
     const cookies = parseCookies(cookieHeader);
     const token = cookies.session;
-    if (!token) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    if (!token) return NextResponse.json({ error: 'You shall not pass 🧙‍♂️ (missing or invalid credentials)' }, { status: 401 });
 
     let payload;
     try {
       payload = verifyToken(token);
     } catch (e) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+      return NextResponse.json({ error: 'You shall not pass 🧙‍♂️ (missing or invalid credentials)' }, { status: 401 });
     }
 
     const body = await req.json();
@@ -25,7 +25,7 @@ export async function POST(req) {
     }
 
     if (Object.keys(updates).length === 0) {
-      return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 });
+      return NextResponse.json({ error: 'No valid fields to update — something’s missing 🧐' }, { status: 400 });
     }
 
     const user = await prisma.user.update({

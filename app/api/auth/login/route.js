@@ -6,7 +6,7 @@ import { NextResponse } from 'next/server';
 export async function POST(req) {
   try {
     const { email, password } = await req.json();
-    if (!email || !password) return NextResponse.json({ error: 'Missing email or password' }, { status: 400 });
+    if (!email || !password) return NextResponse.json({ error: 'Missing email or password — required fields went on vacation 🏝️' }, { status: 400 });
 
     let user;
     try {
@@ -14,14 +14,14 @@ export async function POST(req) {
     } catch (e) {
       const msg = (e && e.message) ? e.message : '';
       if (msg.includes("Can't reach database") || e.name === 'PrismaClientInitializationError') {
-        return NextResponse.json({ error: 'Service temporarily unavailable — cannot reach the database.' }, { status: 503 });
+        return NextResponse.json({ error: 'The database is on a coffee break. Please retry shortly ☕' }, { status: 503 });
       }
       throw e;
     }
-    if (!user) return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+    if (!user) return NextResponse.json({ error: 'Nice try. The bouncer says you’re not on the list 🕶️' }, { status: 401 });
 
     const ok = await bcrypt.compare(password, user.passwordHash);
-    if (!ok) return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+    if (!ok) return NextResponse.json({ error: 'Authentication failed. Please prove you are, in fact, you.' }, { status: 401 });
 
     const token = signToken({ id: user.id, role: user.role });
     const cookie = createAuthCookie(token);

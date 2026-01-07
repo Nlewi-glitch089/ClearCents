@@ -1,5 +1,6 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function EditProfilePage() {
   const [loading, setLoading] = useState(true);
@@ -7,6 +8,8 @@ export default function EditProfilePage() {
   const [goal, setGoal] = useState('');
   const [monthly, setMonthly] = useState('');
   const [status, setStatus] = useState(null);
+  const router = useRouter();
+  const savedTimer = useRef(null);
 
   useEffect(() => {
     let mounted = true;
@@ -17,7 +20,7 @@ export default function EditProfilePage() {
         if (!mounted) return;
         if (d.user) setName(d.user.name || '');
 
-        const r2 = await fetch('/api/onboarding', { credentials: 'same-origin' });
+        const r2 = await fetch('/api/onboarding', { credentials: 'same-origin', cache: 'no-store' });
         if (r2.ok){
           const d2 = await r2.json();
           if (!d2.error && d2.onboarding){
@@ -25,7 +28,7 @@ export default function EditProfilePage() {
             setMonthly(d2.onboarding.monthly || '');
           }
         }
-      }catch(e){}
+      }catch(e){ console.error('Silent failure detected [profile-edit:load]', e); }
       setLoading(false);
     }
     load();
@@ -44,11 +47,21 @@ export default function EditProfilePage() {
       const res2 = await fetch('/api/onboarding', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ goal, monthly }) });
       if (!res2.ok) throw new Error((await res2.json()).error || 'Failed to save goals');
 
+      const d2 = await res2.json();
+      // dispatch an event so profile/product pages can refresh
+      try { window.dispatchEvent(new CustomEvent('onboarding:updated', { detail: d2.onboarding || { goal, monthly } })); } catch (e) { console.error('Silent failure detected [profile-edit:event-dispatch]', e); }
+
       setStatus('saved');
+      try { if (savedTimer.current) clearTimeout(savedTimer.current); } catch(e){ console.error('Silent failure detected [profile-edit:clear-timeout]', e); }
+      savedTimer.current = setTimeout(()=>{ setStatus(null); savedTimer.current = null; }, 3000);
     } catch (err) {
       setStatus(err.message || 'error');
     }
   }
+
+  useEffect(()=>{
+    return ()=>{ try{ if (savedTimer.current) clearTimeout(savedTimer.current); }catch(e){ console.error('Silent failure detected [profile-edit:cleanup-timeout]', e); } };
+  }, []);
 
   if (loading) return <div className="p-6">Loading...</div>;
 
@@ -73,9 +86,10 @@ export default function EditProfilePage() {
 
         <div className="form-actions">
           <button type="submit" className="btn save">Save</button>
-          <button type="button" className="btn ghost" onClick={()=>history.back()}>Cancel</button>
+          <button type="button" className="btn ghost" onClick={()=>router.back()}>Cancel</button>
           {status === 'saving' && <span>Saving…</span>}
-          {status === 'saved' && <span style={{color:'#4ade80'}}>Saved</span>}
+          {status === 'saved' && <span style={{color:'#4ade80',marginRight:12}}>Saved</span>}
+          {status === 'saved' && <button type="button" className="btn" onClick={()=>router.push('/profile')}>Back to profile</button>}
           {status && status !== 'saving' && status !== 'saved' && status !== 'error' && <div className="text-red-600">{status}</div>}
           {status === 'error' && <div className="text-red-600">An error occurred</div>}
         </div>

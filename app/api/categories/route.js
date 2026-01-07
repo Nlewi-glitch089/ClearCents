@@ -21,13 +21,27 @@ export async function GET(req) {
     const user = await getUserFromReq(req);
 
     // If not signed in, return a small set of default categories (not persisted)
-    const incomeDefaults = ['Job','Allowance','Gift','Side Hustle','Other'];
+    // Keep a single "Other" option to avoid duplicate buttons in the UI.
+    const incomeDefaults = ['Job','Allowance','Gift','Side Hustle'];
     const expenseDefaults = ['Food & Dining','Transport','Entertainment','Subscriptions','Other'];
     const defaults = [...incomeDefaults, ...expenseDefaults];
     if (!user) {
       const cats = [];
-      incomeDefaults.forEach((name, idx) => cats.push({ id: `default-income-${idx}-${name.replace(/\s+/g,'').toLowerCase()}`, name, type: 'income' }));
-      expenseDefaults.forEach((name, idx) => cats.push({ id: `default-expense-${idx}-${name.replace(/\s+/g,'').toLowerCase()}`, name, type: 'expense' }));
+      const seen = new Set();
+      incomeDefaults.forEach((name, idx) => {
+        const key = name.trim().toLowerCase();
+        if (!seen.has(key)) {
+          seen.add(key);
+          cats.push({ id: `default-income-${idx}-${key.replace(/\s+/g,'')}`, name, type: 'income' });
+        }
+      });
+      expenseDefaults.forEach((name, idx) => {
+        const key = name.trim().toLowerCase();
+        if (!seen.has(key)) {
+          seen.add(key);
+          cats.push({ id: `default-expense-${idx}-${key.replace(/\s+/g,'')}`, name, type: 'expense' });
+        }
+      });
       return NextResponse.json({ categories: cats });
     }
 

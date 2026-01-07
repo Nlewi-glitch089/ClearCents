@@ -86,9 +86,9 @@ export default function LoginPage(){
 
                 {isLocal && (
                   <div style={{marginTop:8,display:'flex',gap:8}}>
-                    <button type="button" className="btn ghost" onClick={()=>devFill('rob')}>Dev: rob</button>
-                    <button type="button" className="btn ghost" onClick={()=>devFill('sanaa')}>Dev: sanaa</button>
-                    <button type="button" className="btn ghost" onClick={()=>devFill('taheera')}>Dev: taheera</button>
+                    <button type="button" className="btn ghost" onClick={()=>devFill('rob')}>Dev: Rob</button>
+                    <button type="button" className="btn ghost" onClick={()=>devFill('sanaa')}>Dev: Sanaa</button>
+                    <button type="button" className="btn ghost" onClick={()=>devFill('taheera')}>Dev: Taheera</button>
                   </div>
                 )}
 

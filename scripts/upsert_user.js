@@ -5,7 +5,7 @@ async function main() {
   const email = process.env.EMAIL;
   const password = process.env.PASSWORD;
   if (!email || !password) {
-    console.error('Usage: EMAIL=you@example.com PASSWORD=pass node scripts/upsert_user.js');
+    console.error('Incorrect usage. The script demands tribute: EMAIL=you@example.com PASSWORD=pass');
     process.exit(1);
   }
 
@@ -19,7 +19,7 @@ async function main() {
     });
     console.log('Upserted user:', user.email);
   } catch (e) {
-    console.error('Error:', e.message || e);
+    console.error('Script error detected [upsert_user]:', e.message || e);
     process.exit(2);
   } finally {
     await db.$disconnect();

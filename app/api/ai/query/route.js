@@ -22,8 +22,8 @@ export async function POST(req) {
     const user = await getUserFromReq(req);
     const body = await req.json().catch(() => ({}));
     const query = (body.query || '').trim();
-    if (!query) return NextResponse.json({ error: 'Missing query' }, { status: 400 });
-    if (query.length > 2000) return NextResponse.json({ error: 'Query too long' }, { status: 400 });
+    if (!query) return NextResponse.json({ error: 'Query received, but it made no sense to us 🤷‍♀️' }, { status: 400 });
+    if (query.length > 2000) return NextResponse.json({ error: 'That query is doing way too much. Please calm it down.' }, { status: 400 });
 
     let txs = [];
     if (user) {
@@ -34,7 +34,7 @@ export async function POST(req) {
 
     const insights = user ? await getRecentInsights(user.id, 6) : [];
 
-    const OPENAI_KEY = process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_KEY;
+    const OPENAI_KEY = process.env.OPENAI_KEY || process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_KEY;
 
     // Build candidate context texts
     const contexts = [];
@@ -70,22 +70,61 @@ export async function POST(req) {
     let source = 'deterministic';
 
     if (OPENAI_KEY) {
+      // If the user asks for recommendations/resources, instruct the model to include a short link,
+      // a one-line description, why it might help, and an alternative option.
+      let systemPrompt = 'You are a concise, non-judgmental financial assistant for students. Answer clearly and cite any transaction context provided.';
+      if (/\b(resource|recommend|recommendation|link|suggest|where can I|what should I use|alternat(e|ive))\b/i.test(query)) {
+        systemPrompt += ' When the user asks for resources or recommendations, include one short URL and a one-line description for it, explain briefly why it might help, and offer one alternative recommendation.';
+        systemPrompt += ' Do not recommend or promote third-party budgeting apps (for example, do not name Mint, YNAB, or similar products). If asked about budgeting tools, either suggest general budgeting features, link to an educational resource titled "Budgeting Apps" or to the site\'/help pages, or provide neutral, non-branded resources.';
+      }
+
       const messages = [
-        { role: 'system', content: 'You are a concise, non-judgmental financial assistant for students. Answer clearly and cite any transaction context provided.' },
+        { role: 'system', content: systemPrompt },
         { role: 'user', content: prompt }
       ];
       try {
-        const resp = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${OPENAI_KEY}` },
-          body: JSON.stringify({ model: 'gpt-3.5-turbo', messages, max_tokens: 450, temperature: 0.2 })
-        });
-        const data = await resp.json();
-        if (data && data.choices && data.choices[0] && data.choices[0].message) {
-          answer = data.choices[0].message.content.trim();
-          source = 'openai';
-        } else {
-          answer = 'I could not generate an answer right now.';
+        // Try a small list of candidate models and pick the first that the key can use.
+        const candidateModels = [
+          'gpt-3.5-turbo',
+          'gpt-3.5-turbo-16k',
+          'gpt-4o-mini',
+          'gpt-4o' // keep as last resort; your key may not have access
+        ];
+        let lastError = null;
+        for (const model of candidateModels) {
+          try {
+            const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${OPENAI_KEY}` },
+              body: JSON.stringify({ model, messages, max_tokens: 450, temperature: 0.2 })
+            });
+            const data = await resp.json().catch(() => ({}));
+            if (!resp.ok) {
+              lastError = data?.error?.message || JSON.stringify(data || {});
+              // If error indicates model access denied, try the next model
+              if (/does not have access|not available|is not available|permission/i.test(lastError)) {
+                continue;
+              }
+              // other provider errors should be surfaced
+              answer = `LLM provider error: ${lastError}`;
+              lastError = null;
+              break;
+            }
+            if (data && data.choices && data.choices[0] && data.choices[0].message) {
+              answer = data.choices[0].message.content.trim();
+              source = 'openai';
+              lastError = null;
+              break; // success
+            }
+            lastError = `Unexpected response shape: ${JSON.stringify(data).slice(0,200)}`;
+          } catch (inner) {
+            lastError = inner.message || String(inner);
+            continue;
+          }
+        }
+        if (lastError && !answer) {
+          // Surface the most relevant provider error
+          answer = `LLM provider error: ${lastError}`;
         }
       } catch (e) {
         answer = 'Error contacting LLM provider.';

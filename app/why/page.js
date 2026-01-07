@@ -15,7 +15,7 @@ export default function Why() {
 
           <div style={{marginTop:12}} className="feature-grid">
             <div className="feature-card animate-enter">
-              <div className="feature-icon"><Icon name="ai" /></div>
+              <div className="feature-icon why-icon"><Icon name="bot" /></div>
               <div>
                 <div className="feature-title">AI Insights</div>
                 <div className="feature-desc">Short, actionable text suggestions based on recent activity.</div>
@@ -23,7 +23,7 @@ export default function Why() {
             </div>
 
             <div className="feature-card animate-enter">
-              <div className="feature-icon"><Icon name="bolt" /></div>
+              <div className="feature-icon why-icon"><Icon name="zap" /></div>
               <div>
                 <div className="feature-title">Fast Entry</div>
                 <div className="feature-desc">Minimal fields so students can log on the go.</div>

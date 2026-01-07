@@ -7,6 +7,7 @@ import AIChat from '../../components/AIChat';
 export default function Product() {
   const [categories, setCategories] = useState([]);
   const [user, setUser] = useState(null);
+  const [previewGuest, setPreviewGuest] = useState(false);
   const [type, setType] = useState('expense');
   const [amounts, setAmounts] = useState({ income: '0.00', expense: '0.00' });
   const [categoryId, setCategoryId] = useState('');
@@ -14,18 +15,28 @@ export default function Product() {
   const [transactions, setTransactions] = useState([]);
   const [totals, setTotals] = useState({ income: 0, expenses: 0 });
   const [insight, setInsight] = useState('');
+  const [insightDetails, setInsightDetails] = useState(null);
   const [onboarding, setOnboarding] = useState(null);
 
   useEffect(() => {
-    fetch('/api/auth/me', { credentials: 'same-origin' }).then(r=>r.json()).then(async d=>{ if (d.user) { setUser(d.user);
-       // fetch onboarding for signed-in users
+     fetch('/api/auth/me', { credentials: 'same-origin' }).then(r=>r.json()).then(async d=>{ if (d.user) { setUser(d.user);
+       // fetch onboarding for signed-in users (force fresh copy)
        try{
-         const ob = await fetch('/api/onboarding');
+         const ob = await fetch('/api/onboarding', { credentials: 'same-origin', cache: 'no-store' });
          if (ob.ok){ const od = await ob.json(); if (!od.error) setOnboarding(od.onboarding || null); }
-       }catch(e){}
-    }}).catch(()=>{});
-    fetch('/api/categories', { credentials: 'same-origin' }).then(r => r.json()).then(d => { if (d.categories) { setCategories(d.categories); if (d.categories[0]) setCategoryId(d.categories[0].id); }}).catch(()=>{});
+       }catch(e){ console.error('Silent failure detected [product:fetch-onboarding]', e); }
+     }}).catch(e=>{ console.error('Silent failure detected [product:fetch-me]', e); });
+     fetch('/api/categories', { credentials: 'same-origin' }).then(r => r.json()).then(d => { if (d.categories) { setCategories(d.categories); if (d.categories[0]) setCategoryId(d.categories[0].id); }}).catch(e=>{ console.error('Silent failure detected [product:fetch-categories]', e); });
     loadTransactions();
+  }, []);
+
+  // update onboarding when other pages dispatch an update event
+  useEffect(()=>{
+    function onUpdate(){
+      fetch('/api/onboarding', { credentials: 'same-origin', cache: 'no-store' }).then(r=>r.json()).then(d=>{ if (!d.error) setOnboarding(d.onboarding || null); }).catch(e=>{ console.error('Silent failure detected [product:onboarding-update]', e); });
+    }
+    window.addEventListener('onboarding:updated', onUpdate);
+    return () => window.removeEventListener('onboarding:updated', onUpdate);
   }, []);
 
   // Ensure a default category is selected when categories change
@@ -68,18 +79,21 @@ export default function Product() {
   }, [type, categories]);
 
   function loadTransactions(){
-    fetch('/api/transactions', { credentials: 'same-origin' }).then(r=>r.json()).then(d=>{ if (d.transactions) { setTransactions(d.transactions); setTotals(d.totals || {income:0,expenses:0}); } }).catch(()=>{});
+    fetch('/api/transactions', { credentials: 'same-origin' }).then(r=>r.json()).then(d=>{ if (d.transactions) { setTransactions(d.transactions); setTotals(d.totals || {income:0,expenses:0}); } }).catch(e=>{ console.error('Silent failure detected [product:load-transactions]', e); });
   }
 
   async function handleAdd(e){
     e.preventDefault();
     const amt = parseFloat(amounts[type]) || 0;
-    if (user) {
+    const effectiveUser = previewGuest ? null : user;
+    if (effectiveUser) {
       const body = { amount: amt, type, categoryId, description: desc };
       const res = await fetch('/api/transactions', { method:'POST', credentials: 'same-origin', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
       const data = await res.json();
       if (res.ok) {
         setAmounts(prev => ({ ...prev, [type]: '0.00' })); setDesc('');
+        // notify global UI that a transaction was added (staff/admin can listen)
+        try { window.dispatchEvent(new CustomEvent('transaction:added', { detail: data.transaction })); } catch(e){ console.error('Silent failure detected [product:transaction-event-dispatch]', e); }
         loadTransactions();
       } else {
         alert(data.error || 'Error adding transaction');
@@ -95,6 +109,7 @@ export default function Product() {
         return { income: type === 'income' ? inc + amt : inc, expenses: type === 'expense' ? exp + amt : exp };
       });
       setAmounts(prev => ({ ...prev, [type]: '0.00' })); setDesc('');
+      try { window.dispatchEvent(new CustomEvent('transaction:added', { detail: tx })); } catch(e){ console.error('Silent failure detected [product:transaction-event-dispatch]', e); }
     }
   }
 
@@ -102,7 +117,8 @@ export default function Product() {
     // show loading state and ensure at least a short delay so it feels like a real request
     setInsight('Generating...');
     const start = Date.now();
-    const payload = user ? { onboarding } : { transactions };
+    const effectiveUser = previewGuest ? null : user;
+    const payload = effectiveUser ? { onboarding } : { transactions };
     const res = await fetch('/api/ai/insight', { method: 'POST', credentials: 'same-origin', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
     const d = await res.json();
     const elapsed = Date.now() - start;
@@ -110,12 +126,11 @@ export default function Product() {
     if (elapsed < minDelay) await new Promise(r => setTimeout(r, minDelay - elapsed));
 
     if (res.ok) {
-      // indicate source (openai vs fallback) and saved status
-      const src = d.source || (d.saved === false ? 'deterministic' : 'openai');
-      const saveNote = d.saved === false ? (d.message || 'Sign in to save insights and history.') : 'Insight saved to your history.';
-      setInsight(d.insight + '\n\n' + (src === 'openai' ? saveNote : 'Preview only — ' + saveNote));
+      setInsight(d.insight || '');
+      setInsightDetails(d.details || null);
     } else {
       setInsight(d.error || d.message || 'Error generating insight');
+      setInsightDetails(null);
     }
   }
 
@@ -124,11 +139,17 @@ export default function Product() {
   return (
     <>
       <div className="page-hero card">
-        <h2>{user ? `Welcome${user.email ? `, ${user.email.split('@')[0]}` : ''}` : 'Product Dashboard'}</h2>
-        <p className="lead">{user ? (onboarding && onboarding.goal ? `Your goal: ${onboarding.goal}. We'll tailor insights to help you reach it.` : 'Track your income and expenses, and get AI-powered insights tailored to you.') : 'Track your income and expenses, and get AI-powered insights'}</p>
+        <h2>{(previewGuest ? null : user) ? `${user ? `Welcome${user.email ? `, ${user.email.split('@')[0]}` : ''}` : ''}` : 'Product Dashboard'}</h2>
+        <p className="lead">{(previewGuest ? null : user) ? (onboarding && onboarding.goal ? `Your goal: ${onboarding.goal}. We'll tailor insights to help you reach it.` : 'Track your income and expenses, and get AI-powered insights tailored to you.') : 'Track your income and expenses, and get AI-powered insights'}</p>
+        {user && (user.role === 'coach' || user.role === 'instructor') && (
+          <div style={{marginTop:8}}>
+            <button className="btn secondary" onClick={()=>{ setPreviewGuest(true); setTimeout(()=>setPreviewGuest(false), 120000); }}>Preview as guest (2m)</button>
+            {previewGuest && <span style={{marginLeft:12,color:'var(--muted)'}}>Previewing as guest — your session is not affected</span>}
+          </div>
+        )}
       </div>
 
-      {!user && (
+      {(!previewGuest && !user) && (
         <div className="signed-out-banner" role="status" aria-live="polite">
           <div>
             <div className="message">You are not signed in — transactions will not be saved.</div>
@@ -142,7 +163,7 @@ export default function Product() {
 
       <div className="card" style={{marginBottom:18}}>
         <h3 style={{textAlign:'center'}}>Add Transaction</h3>
-        {!user && <div className="muted-note">You are not signed in — transactions will not be saved. <Link href="/auth">Sign in or create an account</Link>.</div>}
+        {(!previewGuest && !user) && <div className="muted-note">You are not signed in — transactions will not be saved. <Link href="/auth">Sign in or create an account</Link>.</div>}
         <form onSubmit={handleAdd} className="transaction-form">
           <div className="form-row">
             <label>Type</label>
@@ -202,9 +223,41 @@ export default function Product() {
 
       <div className="card" style={{marginBottom:18}}>
         <h3 style={{textAlign:'center'}}>AI Insight</h3>
-        <div style={{padding:12,background:'var(--accent)',borderRadius:6,color:'#021'}}>{insight || 'Start adding your income and expenses to receive personalized insights!'}</div>
+        <div style={{padding:12,background:'var(--accent)',borderRadius:6,color:'#021'}}>
+          {insight || 'Start adding your income and expenses to receive personalized insights!'}
+          {insightDetails && (
+            <div style={{marginTop:10,color:'#021'}}>
+              <div style={{display:'flex',gap:12,flexWrap:'wrap'}}>
+                <div style={{background:'rgba(255,255,255,0.95)',padding:'8px 10px',borderRadius:8,color:'#012'}}>Income: ${Number(insightDetails.income||0).toFixed(2)}</div>
+                <div style={{background:'rgba(255,255,255,0.95)',padding:'8px 10px',borderRadius:8,color:'#012'}}>Expenses: ${Number(insightDetails.expenses||0).toFixed(2)}</div>
+                <div style={{background:'rgba(255,255,255,0.95)',padding:'8px 10px',borderRadius:8,color:'#012'}}>Balance: ${Number(insightDetails.balance||0).toFixed(2)}</div>
+                {insightDetails.savingsRate !== null && <div style={{background:'rgba(255,255,255,0.95)',padding:'8px 10px',borderRadius:8,color:'#012'}}>Savings rate: {insightDetails.savingsRate}%</div>}
+              </div>
+              {insightDetails.topCategories && insightDetails.topCategories.length > 0 && (
+                <div style={{marginTop:8,color:'#021'}}>
+                  <strong>Top categories:</strong>
+                  <ul style={{margin:6,paddingLeft:18,color:'#012'}}>
+                    {insightDetails.topCategories.map((c,idx)=> (
+                      <li key={idx}>{c.name}: ${Number(c.amount).toFixed(2)}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {insightDetails.suggestions && insightDetails.suggestions.length > 0 && (
+                <div style={{marginTop:8,color:'#021'}}>
+                  <strong>Suggestions:</strong>
+                  <ul style={{margin:6,paddingLeft:18,color:'#012'}}>
+                    {insightDetails.suggestions.map((s,idx)=> (
+                      <li key={idx}>{s}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
         <div style={{marginTop:8}}><button onClick={handleInsight} className="btn">Generate Insight</button></div>
-        {!user && (
+        {(!previewGuest && !user) && (
           <div style={{marginTop:10}} className="muted-note">Sign in to save insights and history and access them later. <Link href="/auth">Sign in / Create account</Link></div>
         )}
       </div>
@@ -218,7 +271,9 @@ export default function Product() {
                 <div>{tx.description || (tx.type || '').toUpperCase()}</div>
                 <div>${Number(tx.amount).toFixed(2)}</div>
               </div>
-              <div style={{fontSize:12,opacity:0.8}}>{new Date(tx.occurredAt).toLocaleDateString()} • {(tx.type || '').toUpperCase()}</div>
+              <div style={{fontSize:12,opacity:0.8}}>
+                {new Date(tx.occurredAt).toLocaleDateString()} • {new Date(tx.occurredAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </div>
             </li>
           ))}
         </ul>

@@ -5,16 +5,17 @@ import Icon from './Icon';
 function iconFor(name) {
   if (!name) return 'dot';
   const n = name.toLowerCase();
-  if (n.includes('pay') || n.includes('job') || n.includes('salary') || n.includes('wage')) return 'job';
-  if (n.includes('allow')) return 'allowance';
+  if (n.includes('pay') || n.includes('job') || n.includes('salary') || n.includes('wage')) return 'briefcase';
+  if (n.includes('allow')) return 'wallet';
   if (n.includes('gift')) return 'gift';
-  if (n.includes('side') || n.includes('hustle')) return 'side';
-  if (n.includes('saving')) return 'savings';
-  if (n.includes('food')) return 'food';
-  if (n.includes('transport')) return 'transport';
-  if (n.includes('entertain')) return 'entertainment';
-  if (n.includes('subscript')) return 'subscriptions';
-  return 'dot';
+  if (n.includes('side') || n.includes('hustle')) return 'rocket';
+  if (n.includes('saving') || n.includes('goal')) return 'target';
+  if (n.includes('food')) return 'utensils';
+  if (n.includes('transport')) return 'bus';
+  if (n.includes('entertain')) return 'gamepad';
+  if (n.includes('subscript')) return 'repeat';
+  if (n.includes('other')) return 'more-horizontal';
+  return 'more-horizontal';
 }
 
 export default function CategorySelect({ categories = [], value, onChange, placeholder='-- Select --' }) {

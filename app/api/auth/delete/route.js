@@ -18,17 +18,17 @@ async function getPayloadFromReq(req){
 export async function POST(req){
   try{
     const payload = await getPayloadFromReq(req);
-    if (!payload) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    if (!payload) return NextResponse.json({ error: 'You shall not pass 🧙‍♂️ (missing or invalid credentials)' }, { status: 401 });
 
     const body = await req.json();
     const { password } = body;
-    if (!password) return NextResponse.json({ error: 'Password required' }, { status: 400 });
+    if (!password) return NextResponse.json({ error: 'Password required. Secrets are mandatory here 🤐' }, { status: 400 });
 
     const user = await prisma.user.findUnique({ where: { id: payload.id } });
-    if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    if (!user) return NextResponse.json({ error: 'User not found. Are they real, or just a legend?' }, { status: 404 });
 
     const ok = await bcrypt.compare(password, user.passwordHash);
-    if (!ok) return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
+    if (!ok) return NextResponse.json({ error: 'Authentication failed. Please prove you are, in fact, you.' }, { status: 401 });
 
     // Remove dependent records in a safe order to avoid FK issues
     await prisma.transaction.deleteMany({ where: { userId: user.id } });

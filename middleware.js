@@ -39,26 +39,8 @@ export async function middleware(req) {
     return NextResponse.next();
   }
 
-  // Staff protection (unchanged)
-  const staffPaths = ['/rubric', '/reflection'];
-  if (staffPaths.some(p => pathname.startsWith(p))) {
-    const cookie = req.cookies.get('session') || '';
-    if (!cookie) {
-      url.pathname = '/';
-      return NextResponse.redirect(url);
-    }
-    const payload = decodeJwtPayload(cookie);
-    if (!payload || !payload.role) {
-      url.pathname = '/';
-      return NextResponse.redirect(url);
-    }
-    const allowed = payload.role === 'coach' || payload.role === 'instructor';
-    if (!allowed) {
-      url.pathname = '/';
-      return NextResponse.redirect(url);
-    }
-    return NextResponse.next();
-  }
+  // Note: staff-only page protection moved to server-rendered pages.
+  // We avoid redirecting here so staff links navigate reliably; individual pages still check role server-side.
 
   // Mandatory onboarding: if user is signed in but has no onboarding saved, redirect them to onboarding.
   // Skip for auth pages and onboarding itself to avoid loops.

@@ -27,11 +27,11 @@ export async function POST(req) {
       if (isDbError(e)) return dbUnavailableResponse();
       throw e;
     }
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!user) return NextResponse.json({ error: 'Nice try. The bouncer says you’re not on the list 🕶️' }, { status: 401 });
 
     const body = await req.json();
     const { amount, type, categoryId, description, occurredAt } = body;
-    if (!amount || !type) return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+    if (!amount || !type) return NextResponse.json({ error: 'Required fields went on vacation 🏝️' }, { status: 400 });
 
     const tx = await prisma.transaction.create({
       data: {
@@ -59,7 +59,7 @@ export async function GET(req) {
       if (isDbError(e)) return dbUnavailableResponse();
       throw e;
     }
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!user) return NextResponse.json({ error: 'Nice try. The bouncer says you’re not on the list 🕶️' }, { status: 401 });
 
     const txs = await prisma.transaction.findMany({ where: { userId: user.id }, orderBy: { occurredAt: 'desc' }, take: 100 });
     // compute totals

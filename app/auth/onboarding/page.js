@@ -13,7 +13,7 @@ export default function OnboardingPage(){
     let mounted = true;
     async function load(){
       try{
-        const r = await fetch('/api/onboarding');
+        const r = await fetch('/api/onboarding', { cache: 'no-store' });
         if (!r.ok) return;
         const d = await r.json();
         if (!mounted) return;
@@ -25,7 +25,7 @@ export default function OnboardingPage(){
           if (ob.why) setWhy(ob.why || '');
           if (ob.reasons && Array.isArray(ob.reasons)) setSelected(ob.reasons);
         }
-      }catch(e){}
+      }catch(e){ console.error('Silent failure detected [onboarding:load]', e); }
     }
     load();
     return ()=> mounted = false;
@@ -42,6 +42,8 @@ export default function OnboardingPage(){
     const data = await res.json();
     setLoading(false);
     if (!res.ok) return setError(data.error || 'Failed to save onboarding');
+    // notify other windows/components that onboarding changed
+    try { window.dispatchEvent(new CustomEvent('onboarding:updated', { detail: data.onboarding || body })); } catch (e) { console.error('Silent failure detected [onboarding:event-dispatch]', e); }
     // If editing existing onboarding, show a saved state and return to profile
     if (isExisting) {
       setSaved(true);
