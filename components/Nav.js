@@ -25,7 +25,7 @@ export default function Nav() {
   async function handleSignOut(e) {
     e.preventDefault();
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
     } catch (err) {
       // ignore
     }
