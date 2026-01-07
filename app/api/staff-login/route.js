@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { signToken, createAuthCookie } from '../../../../lib/auth.js';
+import { signToken, createAuthCookie } from '../../../lib/auth.js';
 
 // Dev-only staff credentials (insecure - for local/dev only)
 const STAFF = {

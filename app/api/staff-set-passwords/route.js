@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import prisma from '../../../../lib/prisma.js';
+import prisma from '../../../lib/prisma.js';
 import { NextResponse } from 'next/server';
 
 // Dev-only endpoint: set staff users' passwords to the provided mapping.
