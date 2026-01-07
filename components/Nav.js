@@ -7,17 +7,26 @@ export default function Nav() {
 
   useEffect(() => {
     let mounted = true;
-    fetch('/api/auth/me', { cache: 'no-store', credentials: 'same-origin' })
-      .then((r) => r.json())
-      .then((data) => {
+    async function load() {
+      try {
+        const r = await fetch('/api/auth/me', { cache: 'no-store', credentials: 'same-origin' });
+        const data = await r.json();
         if (!mounted) return;
         setUser(data.user || null);
-      })
-      .catch(() => {
+      } catch (e) {
         if (!mounted) return;
         setUser(null);
-      });
-    return () => (mounted = false);
+      }
+    }
+
+    load();
+
+    function onAuthChanged() {
+      load();
+    }
+
+    window.addEventListener('auth:changed', onAuthChanged);
+    return () => { mounted = false; window.removeEventListener('auth:changed', onAuthChanged); };
   }, []);
 
   if (!user) return null;

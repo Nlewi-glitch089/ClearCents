@@ -9,19 +9,23 @@ export default function StaffLinks() {
 
   useEffect(() => {
     let mounted = true;
-    fetch('/api/auth/me')
-      .then((res) => res.json())
-      .then((data) => {
+    async function load() {
+      try {
+        const res = await fetch('/api/auth/me', { cache: 'no-store', credentials: 'same-origin' });
+        const data = await res.json();
         if (!mounted) return;
         setRole(data?.user?.role || null);
-      })
-      .catch(() => {
+      } catch (e) {
         if (!mounted) return;
         setRole(null);
-      });
-    return () => {
-      mounted = false;
-    };
+      }
+    }
+
+    load();
+
+    function onAuthChanged() { load(); }
+    window.addEventListener('auth:changed', onAuthChanged);
+    return () => { mounted = false; window.removeEventListener('auth:changed', onAuthChanged); };
   }, []);
 
   if (!role) return null;

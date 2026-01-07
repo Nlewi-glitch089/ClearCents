@@ -40,7 +40,8 @@ export default function LoginPage(){
       // show friendly message
       return setError(data.error || (res.status === 401 ? 'Invalid email or password' : 'Login failed'));
     }
-    // success: cookie set by server
+    // success: cookie set by server — notify other components and navigate
+    try { window.dispatchEvent(new Event('auth:changed')); } catch (e) { /* ignore */ }
     router.push('/product');
   }
 

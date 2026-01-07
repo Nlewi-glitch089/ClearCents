@@ -41,7 +41,7 @@ export default async function RootLayout({ children }) {
             <Link href="/why">Why ClearCents?</Link>
             <Link href="/features">Features</Link>
             <Link href="/product">Product</Link>
-            {isStaff ? <StaffLinks /> : null}
+            <StaffLinks />
             <Nav />
           </nav>
         </header>
