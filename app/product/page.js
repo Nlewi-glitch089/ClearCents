@@ -17,6 +17,7 @@ export default function Product() {
   const [insight, setInsight] = useState('');
   const [insightDetails, setInsightDetails] = useState(null);
   const [onboarding, setOnboarding] = useState(null);
+  const [apiAccounts, setApiAccounts] = useState([]);
 
   useEffect(() => {
      fetch('/api/auth/me', { credentials: 'same-origin' }).then(r=>r.json()).then(async d=>{ if (d.user) { setUser(d.user);
@@ -37,6 +38,18 @@ export default function Product() {
     }
     window.addEventListener('onboarding:updated', onUpdate);
     return () => window.removeEventListener('onboarding:updated', onUpdate);
+  }, []);
+
+  useEffect(() => {
+    function loadAccounts() {
+      fetch('/api/accounts', { credentials: 'same-origin' })
+        .then(r => r.json())
+        .then(d => { if (Array.isArray(d.accounts)) setApiAccounts(d.accounts); })
+        .catch(e => { console.error('Silent failure detected [product:load-accounts]', e); });
+    }
+    loadAccounts();
+    window.addEventListener('accounts:updated', loadAccounts);
+    return () => window.removeEventListener('accounts:updated', loadAccounts);
   }, []);
 
   // Ensure a default category is selected when categories change
@@ -135,6 +148,10 @@ export default function Product() {
   }
 
   const balance = (totals.income || 0) - (totals.expenses || 0);
+  const netExistingAssets = Math.max(0, apiAccounts.reduce((sum, a) => {
+    const b = Number(a.balance) || 0;
+    return a.type === 'credit_card' ? sum - b : sum + b;
+  }, 0));
 
   return (
     <>
