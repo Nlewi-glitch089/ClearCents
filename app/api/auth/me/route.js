@@ -18,7 +18,7 @@ export async function GET(req) {
 
     let user;
     try {
-      user = await prisma.user.findUnique({ where: { id: payload.id }, select: { id: true, email: true, role: true } });
+      user = await prisma.user.findUnique({ where: { id: payload.id }, select: { id: true, email: true, name: true, role: true, createdAt: true } });
     } catch (e) {
       if (e && (e.name === 'PrismaClientInitializationError' || (e.message || '').includes("Can't reach database"))) {
         return NextResponse.json({ error: 'The database ghosted us. Try again in a moment 👻' }, { status: 503 });
@@ -36,7 +36,7 @@ export async function GET(req) {
       return NextResponse.json({ user: null }, { status: 200 });
     }
 
-    const safe = { id: user.id, email: user.email, name: null, role: user.role };
+    const safe = { id: user.id, email: user.email, name: user.name || null, role: user.role, createdAt: user.createdAt || null };
     return NextResponse.json({ user: safe }, { status: 200 });
   } catch (err) {
     return NextResponse.json({ error: err.message || String(err) }, { status: 500 });

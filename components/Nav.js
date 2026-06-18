@@ -9,11 +9,12 @@ export default function Nav() {
     let mounted = true;
     async function load() {
       try {
-        const r = await fetch('/api/auth/me', { cache: 'no-store', credentials: 'same-origin' });
+        const r = await fetch('/api/auth/me', { cache: 'no-store', credentials: 'include' });
         const data = await r.json();
         if (!mounted) return;
         setUser(data.user || null);
       } catch (e) {
+        console.error('[nav:fetch-me]', e);
         if (!mounted) return;
         setUser(null);
       }
@@ -21,11 +22,11 @@ export default function Nav() {
 
     load();
 
-    function onAuthChanged() {
-      load();
-    }
+    function onAuthChanged() { load(); }
+    function onStorage(e) { if (e.key === 'clearcents:auth') load(); }
 
     window.addEventListener('auth:changed', onAuthChanged);
+    window.addEventListener('storage', onStorage);
     return () => { mounted = false; window.removeEventListener('auth:changed', onAuthChanged); };
   }, []);
 
@@ -34,10 +35,11 @@ export default function Nav() {
   async function handleSignOut(e) {
     e.preventDefault();
     try {
-      await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
     } catch (err) {
-      // ignore
+      console.error('[nav:logout]', err);
     }
+    try { window.dispatchEvent(new CustomEvent('auth:changed')); } catch (e) { /* ignore */ }
     // After signing out, send the user to the sign-in page
     window.location = '/auth';
   }

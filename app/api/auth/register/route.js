@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 
 export async function POST(req) {
   try {
-    const { email, password, role = 'student' } = await req.json();
+    const { email, password, role = 'member' } = await req.json();
     if (!email || !password) return NextResponse.json({ error: 'Missing email or password — required fields went on vacation 🏝️' }, { status: 400 });
 
     const existing = await prisma.user.findUnique({ where: { email } });

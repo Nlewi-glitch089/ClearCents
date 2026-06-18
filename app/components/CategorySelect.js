@@ -18,7 +18,7 @@ function iconFor(name) {
   return 'more-horizontal';
 }
 
-export default function CategorySelect({ categories = [], value, onChange, placeholder='-- Select --' }) {
+export default function CategorySelect({ categories = [], value, onChange, placeholder='-- Select --', id }) {
   const [open, setOpen] = useState(false);
   const ref = useRef();
   const optionRefs = useRef([]);
@@ -85,7 +85,7 @@ export default function CategorySelect({ categories = [], value, onChange, place
 
   return (
     <div className="custom-select" ref={ref} style={{position:'relative'}}>
-      <button type="button" className="card" onClick={() => setOpen(o => !o)} style={{display:'flex',justifyContent:'space-between',alignItems:'center',width:'100%'}} aria-haspopup="listbox" aria-expanded={open}>
+      <button type="button" id={id} className="card" onClick={() => setOpen(o => !o)} style={{display:'flex',justifyContent:'space-between',alignItems:'center',width:'100%'}} aria-haspopup="listbox" aria-expanded={open}>
         <div style={{display:'flex',gap:12,alignItems:'center'}}>
           {selected ? (
             <>

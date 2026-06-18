@@ -20,8 +20,11 @@ test('renders Start Tracking link to /auth when signed out', async () => {
 
 test('renders Start Tracking link to /product when signed in', async () => {
   global.fetch.mockResolvedValueOnce({ ok: true, json: async ()=>({ user: { id: '1', email: 'a@b.com' } }) });
+  global.fetch.mockResolvedValueOnce({ ok: true, json: async ()=>({ onboarding: { goal: 'Save $200' } }) });
   render(<SignedOutCTA />);
-  const link = await waitFor(()=>screen.getByRole('link', { name: /Start Tracking/i }));
-  expect(link).toBeInTheDocument();
-  expect(link).toHaveAttribute('href', '/product');
+  // Wait for both fetches to resolve and href to update to /product
+  await waitFor(()=>{
+    const link = screen.getByRole('link', { name: /Start Tracking/i });
+    expect(link).toHaveAttribute('href', '/product');
+  });
 });
