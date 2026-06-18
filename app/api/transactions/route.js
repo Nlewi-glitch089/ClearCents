@@ -30,7 +30,7 @@ export async function POST(req) {
     if (!user) return NextResponse.json({ error: 'Nice try. The bouncer says you’re not on the list 🕶️' }, { status: 401 });
 
     const body = await req.json();
-    const { amount, type, categoryId, description, occurredAt } = body;
+    const { amount, type, categoryId, description, occurredAt, accountId } = body;
     if (!amount || !type) return NextResponse.json({ error: 'Required fields went on vacation 🏝️' }, { status: 400 });
 
     const tx = await prisma.transaction.create({
@@ -40,7 +40,8 @@ export async function POST(req) {
         type,
         categoryId: categoryId || null,
         description: description || null,
-        occurredAt: occurredAt ? new Date(occurredAt) : new Date()
+        occurredAt: occurredAt ? new Date(occurredAt) : new Date(),
+        accountId: accountId || null,
       }
     });
 
@@ -61,12 +62,13 @@ export async function GET(req) {
     }
     if (!user) return NextResponse.json({ error: 'Nice try. The bouncer says you’re not on the list 🕶️' }, { status: 401 });
 
-    const txs = await prisma.transaction.findMany({ where: { userId: user.id }, orderBy: { occurredAt: 'desc' }, take: 100 });
+    const txs = await prisma.transaction.findMany({ where: { userId: user.id }, orderBy: { occurredAt: 'desc' } });
     // compute totals
     const totals = txs.reduce(
       (acc, t) => {
         if (t.type === 'income') acc.income += Number(t.amount);
-        else acc.expenses += Number(t.amount);
+        else if (t.type === 'expense') acc.expenses += Number(t.amount);
+        // transfer: excluded from totals
         return acc;
       },
       { income: 0, expenses: 0 }

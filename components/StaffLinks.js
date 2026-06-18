@@ -11,11 +11,12 @@ export default function StaffLinks() {
     let mounted = true;
     async function load() {
       try {
-        const res = await fetch('/api/auth/me', { cache: 'no-store', credentials: 'same-origin' });
+        const res = await fetch('/api/auth/me', { cache: 'no-store', credentials: 'include' });
         const data = await res.json();
         if (!mounted) return;
         setRole(data?.user?.role || null);
       } catch (e) {
+        console.error('[staff-links:fetch-me]', e);
         if (!mounted) return;
         setRole(null);
       }
@@ -24,8 +25,10 @@ export default function StaffLinks() {
     load();
 
     function onAuthChanged() { load(); }
+    function onStorage(e) { if (e.key === 'clearcents:auth') load(); }
     window.addEventListener('auth:changed', onAuthChanged);
-    return () => { mounted = false; window.removeEventListener('auth:changed', onAuthChanged); };
+    window.addEventListener('storage', onStorage);
+    return () => { mounted = false; window.removeEventListener('auth:changed', onAuthChanged); window.removeEventListener('storage', onStorage); };
   }, []);
 
   if (!role) return null;

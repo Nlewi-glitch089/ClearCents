@@ -8,16 +8,32 @@ datasource db {
 }
 
 model User {
-  id           String       @id @default(uuid()) @db.Uuid
-  email        String       @unique
-  name         String?
-  passwordHash String       @map("password_hash")
-  role         UserRole
-  createdAt    DateTime     @default(now()) @map("created_at")
-  categories   Category[]
+  id               String            @id @default(uuid()) @db.Uuid
+  email            String            @unique
+  name             String?
+  passwordHash     String            @map("password_hash")
+  role             String            @default("member")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  accounts         Account[]
+  categories       Category[]
+  transactions     Transaction[]
+  goals            Goal[]
+  aiInsights       AiInsight[]
+  financialActions FinancialAction[]
+  @@map("cc_users")
+}
+
+model Account {
+  id           String      @id @default(uuid()) @db.Uuid
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String      @db.Uuid
+  name         String
+  type         AccountType
+  balance      Decimal     @default(0)
   transactions Transaction[]
-  goals        Goal[]
-  aiInsights   AiInsight[]
+  createdAt    DateTime    @default(now()) @map("created_at")
+  @@index([userId])
+  @@map("accounts")
 }
 
 model Category {
@@ -34,6 +50,8 @@ model Transaction {
   id          String    @id @default(uuid()) @db.Uuid
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      String    @db.Uuid
+  account     Account?  @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  accountId   String?   @db.Uuid @map("account_id")
   amount      Decimal
   type        TransactionType
   category    Category? @relation(fields: [categoryId], references: [id])
@@ -44,15 +62,27 @@ model Transaction {
   @@map("transactions")
 }
 
+enum GoalStatus {
+  active
+  completed
+  archived
+}
+
 model Goal {
-  id           String   @id @default(uuid()) @db.Uuid
-  user         User     @relation(fields: [userId], references: [id])
-  userId       String   @db.Uuid
-  title        String
-  targetAmount Decimal  @map("target_amount")
-  currentAmount Decimal @map("current_amount") @default(0)
-  dueDate      DateTime? @map("due_date")
-  createdAt    DateTime  @map("created_at") @default(now())
+  id              String      @id @default(uuid()) @db.Uuid
+  user            User        @relation(fields: [userId], references: [id])
+  userId          String      @db.Uuid
+  title           String
+  targetAmount    Decimal     @map("target_amount")
+  currentAmount   Decimal     @map("current_amount") @default(0)
+  monthlyTarget   Decimal?    @map("monthly_target")
+  startingBalance Decimal?    @map("starting_balance")
+  dueDate         DateTime?   @map("due_date")
+  status          GoalStatus  @default(active)
+  completedAt     DateTime?   @map("completed_at")
+  createdAt       DateTime    @map("created_at") @default(now())
+  updatedAt       DateTime    @map("updated_at") @updatedAt
+  @@index([userId, status])
   @@map("goals")
 }
 
@@ -66,7 +96,35 @@ model AiInsight {
   @@map("ai_insights")
 }
 
+model FinancialAction {
+  id            String    @id @default(uuid()) @db.Uuid
+  userId        String    @db.Uuid
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  actionId      String
+  title         String
+  status        String    @default("active")
+  priorityScore Int
+  acceptedAt    DateTime  @default(now())
+  completedAt   DateTime?
+  dismissedAt   DateTime?
+  metadata      Json?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("financial_actions")
+}
+
+model FinancialReview {
+  id        String   @id @default(cuid())
+  userId    String
+  period    String
+  content   Json
+  createdAt DateTime @default(now())
+}
+
 enum UserRole {
+  member
   student
   coach
   instructor
@@ -75,4 +133,14 @@ enum UserRole {
 enum TransactionType {
   income
   expense
+  transfer
+}
+
+enum AccountType {
+  checking
+  savings
+  cash
+  credit_card
+  investment
+  other
 }

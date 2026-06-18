@@ -2,19 +2,29 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
-export default function SignedOutCTA(){
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+export default function SignedOutCTA({ label = 'Start Tracking' }) {
+  const [href, setHref] = useState('/auth');
 
-  useEffect(()=>{
+  useEffect(() => {
     let mounted = true;
     fetch('/api/auth/me', { cache: 'no-store', credentials: 'same-origin' })
       .then(r => r.json())
-      .then(d => { if (!mounted) return; setUser(d.user || null); setLoading(false); })
-      .catch(()=>{ if (!mounted) return; setUser(null); setLoading(false); });
-    return ()=> mounted = false;
-  },[]);
+      .then(async d => {
+        if (!mounted) return;
+        if (!d.user) { setHref('/auth'); return; }
+        // Signed-in — check if onboarding is complete
+        try {
+          const ob = await fetch('/api/onboarding', { cache: 'no-store', credentials: 'same-origin' });
+          const od = await ob.json();
+          if (!mounted) return;
+          setHref(od.onboarding ? '/product' : '/auth/onboarding');
+        } catch {
+          if (mounted) setHref('/product');
+        }
+      })
+      .catch(() => { if (mounted) setHref('/auth'); });
+    return () => { mounted = false; };
+  }, []);
 
-  const href = user ? '/product' : '/auth';
-  return <Link href={href} className="btn">Start Tracking</Link>;
+  return <Link href={href} className="btn">{label}</Link>;
 }
