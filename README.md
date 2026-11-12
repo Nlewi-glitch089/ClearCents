@@ -1,130 +1,114 @@
 # ClearCents
 
-Helping young adults build better money habits.
+ClearCents is a financial wellness application designed to help teens and young adults understand their spending, manage income, and work toward savings goals.
 
----
+## Features
 
-## Overview
+- Dashboard with account balances, recent activity, and spending summaries.
+- Income and expense tracking with categories.
+- Savings goals and progress tracking.
+- Transaction and account management.
+- AI-assisted financial insights.
+- Account registration and sign-in.
 
-ClearCents is a financial wellness platform built for teens and young adults who want to improve their budgeting, saving, and spending habits.
+## Technology
 
-Instead of acting like a traditional finance app, ClearCents combines budgeting tools, savings tracking, visual analytics, and AI-powered coaching to help users understand and improve their financial behaviors.
+- Next.js App Router and React
+- JavaScript
+- PostgreSQL with Prisma
+- OpenAI API for server-side AI features
+- CSS and Tailwind CSS
 
+## Requirements
 
----
+- Node.js 22 or newer
+- npm
+- PostgreSQL database (local PostgreSQL or a hosted provider such as Neon)
+- OpenAI API key for AI insight features
 
-## Problem
+## Run locally
 
-Many young adults struggle with:
+1. Clone the repository and enter the project folder:
 
-* Tracking spending consistently
-* Building savings habits
-* Understanding where money goes
-* Setting realistic financial goals
-* Learning personal finance in an engaging way
+   ```bash
+   git clone https://github.com/Nlewi-glitch089/ClearCents.git
+   cd ClearCents
+   ```
 
+2. Install dependencies:
 
-Most budgeting apps are either too complex or designed for experienced users.
+   ```bash
+   npm install
+   ```
 
-ClearCents focuses on simplicity, education, and habit-building.
+3. Copy the environment template:
 
----
+   **macOS / Linux / Git Bash**
+   ```bash
+   cp .env.example .env.local
+   ```
 
-## Solution
+   **Windows PowerShell**
+   ```powershell
+   Copy-Item .env.example .env.local
+   ```
 
-ClearCents provides:
+4. Fill in the values in `.env.local`:
 
-* Expense tracking
-* Income tracking
-* Savings goals
-* Spending analytics
-* Financial habit tracking
-* AI-powered financial coaching
-* Monthly financial summaries
+   | Variable | Purpose |
+   | --- | --- |
+   | `DATABASE_URL` | PostgreSQL connection string |
+   | `OPENAI_API_KEY` | Server-side OpenAI key for AI insight features |
+   | `SESSION_SECRET` | Long, random secret used to sign session tokens |
+   | `VERCEL_OIDC_TOKEN` | Optional Vercel OIDC token |
 
-The platform helps users build confidence through consistent financial awareness.
+5. Generate Prisma Client and apply the checked-in migrations:
 
----
+   ```bash
+   npx prisma generate
+   npx prisma migrate deploy
+   ```
 
-## Core Features
+6. Start the development server:
 
-### Dashboard
+   ```bash
+   npm run dev
+   ```
 
-A personalized financial overview displaying:
+Open [http://localhost:3000](http://localhost:3000).
 
-* Current balance
-* Monthly income
-* Monthly spending
-* Savings progress
-* AI recommendations
-* Recent transactions
+Do not commit `.env.local` or place private keys in variables prefixed with `NEXT_PUBLIC_`.
 
-### Expense Tracking
+## Available commands
 
-Users can:
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Start the Next.js development server |
+| `npm run build` | Create a production build |
+| `npm start` | Start the production server |
+| `npm test` | Run the Jest test suite |
+| `npx prisma generate` | Generate Prisma Client |
+| `npx prisma migrate deploy` | Apply committed database migrations |
+| `npm run seed` | Run the sample-data seed script |
+| `npm run prisma:studio` | Open Prisma Studio |
 
-* Log expenses quickly
-* Categorize spending
-* Track spending patterns
-* View category breakdowns
+## Deployment
 
-### Income Tracking
+GitHub currently lists this Vercel homepage for the project:
 
-Users can:
+[Open ClearCents](https://clear-cents.vercel.app)
 
-* Record income sources
-* Track recurring income
-* Monitor monthly earnings
+To deploy your own instance:
 
-### Savings Goals
+1. Import the repository into [Vercel](https://vercel.com/new).
+2. Use the Next.js framework preset and keep the repository root as the project root.
+3. Add `DATABASE_URL`, `SESSION_SECRET`, and `OPENAI_API_KEY` under Project Settings → Environment Variables.
+4. Deploy with `npm run build).
+5. Apply the committed Prisma migrations to the production database using `npx prisma migrate deploy` as part of a controlled deployment step. Do not run development migrations against production.
+6. Verify sign-in, database-backed transactions and goals, and AI insight behavior in the deployed environment.
 
-Users can:
+The URL above is the repository's configured homepage; confirm the current Vercel Production deployment before sharing it as a working demo.
 
-* Create savings goals
-* Track progress
-* View milestone achievements
+## Project status
 
-### AI Financial Coach
-
-The AI coach analyzes user activity and provides:
-
-* Spending insights
-* Habit recommendations
-* Goal suggestions
-* Encouragement and motivation
-
-### Analytics
-
-Visual reports help users understand:
-
-* Spending trends
-* Income vs expenses
-* Category usage
-* Goal performance
-
----
-
-## Tech Stack
-
-* Next.js App Router
-* JavaScript
-* CSS Modules
-* PostgreSQL / Neon
-* OpenAI API
-
----
-
-## Future Features
-
-* Achievement system
-* Financial challenges
-* Spending streaks
-* Smart reminders
-* Personalized goal suggestions
-* Enhanced analytics
-
----
-
-## Product Vision
-
-ClearCents aims to become a modern financial wellness platform that makes financial literacy engaging, approachable, and actionable for the next generation.
+The repository contains the application and its database schema/migrations. Confirm each feature against the current deployed build before presenting it as production-ready.
